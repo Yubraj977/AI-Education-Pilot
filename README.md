@@ -1,5 +1,6 @@
 # Student Assessment Feedback System (Prototype for Brockport ACM Project)
-<img width="1421" alt="Screenshot 2024-10-09 at 8 52 21 PM" src="https://github.com/user-attachments/assets/842e3152-91df-4c8b-bd39-175e6cdce551">
+<img width="1379" alt="Screenshot 2024-10-16 at 2 41 27 PM" src="https://github.com/user-attachments/assets/bd888172-72e8-4579-8a58-196a6a2cdb8d">
+
 
 ## Description
 This project is a Student Assessment Feedback System that uses AI to provide personalized feedback on student answers. It leverages OpenAI's GPT model and ChromaDB for efficient content storage and retrieval.
