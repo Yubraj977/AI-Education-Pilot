@@ -112,9 +112,9 @@ def get_or_create_chroma_collection():
     
     try:
         collection = db_client.get_collection(name=collection_name, embedding_function=embedding_function)
-        st.success("Using existing ChromaDB collection.")
+        print("Using existing ChromaDB collection.")
     except chromadb.errors.InvalidCollectionException:
-        st.info("No existing ChromaDB collection found. Creating a new one...")
+        print("No existing ChromaDB collection found. Creating a new one...")
         pdf_text = extract_text_from_pdf(module_content_fp)
         chunks, embeddings = embed_content_in_chunks(pdf_text)
         collection = db_client.create_collection(name=collection_name, embedding_function=embedding_function)
@@ -123,7 +123,7 @@ def get_or_create_chroma_collection():
             embeddings=embeddings,
             ids=[f"embedding_{i}" for i in range(len(embeddings))]
         )
-        st.success("New collection created and embeddings added to ChromaDB.")
+        print("New collection created and embeddings added to ChromaDB.")
     
     return collection
 
@@ -237,49 +237,22 @@ def get_feedback(user_answer, question, relevant_content, actual_answer):
     return response.choices[0].message.content
 
 def main():
-    """
-    Main function to run the Student Assessment Feedback System.
-
-    This function sets up the Streamlit interface, loads questions and answers,
-    collects user responses, and generates feedback using AI.
-
-    The function performs the following steps:
-    1. Sets up the Streamlit title and initializes the ChromaDB collection.
-    2. Loads questions and answers from a file.
-    3. Displays questions and collects user answers using Streamlit widgets.
-    4. Generates feedback for each question when the user submits their answer.
-    5. Displays the feedback for each question after submission.
-
-    Note:
-    - This function relies on several helper functions like get_or_create_chroma_collection,
-      load_questions_and_answers, get_relevant_content, and get_feedback.
-    - It uses Streamlit for the user interface and ChromaDB for content storage and retrieval.
-    """
-    # Set page configuration
-    st.set_page_config(
-        page_title="SUNY Brockport Student Assessment",
-        page_icon="🦅",  # Eagle emoji for Brockport
-        layout="wide"
-    )
-
-    # Custom CSS to style the app
+    st.set_page_config(layout="wide")
+    
+    # Brockport green color scheme
     st.markdown("""
     <style>
-    .stApp {
-        background-color: #00533E;
+    .big-font {
+        font-size: 20px !important;
+        font-weight: bold;
+        color: #00533E;
     }
     .stButton>button {
         background-color: #00533E;
         color: white;
     }
-    .stTextInput>div>div>input, .stTextArea>div>div>textarea {
+    .stTextInput>div>div>input {
         border-color: #00533E;
-    }
-    h1 {
-        color: #FFA400;
-    }
-    h2, h3 {
-        color: white;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -287,39 +260,99 @@ def main():
     st.title("SUNY Brockport Student Assessment Feedback System")
 
     with st.spinner("System is starting up, please wait..."):
-        collection = get_or_create_chroma_collection() # Get or create ChromaDB collection
+        collection = get_or_create_chroma_collection()
     
-    questions, answers = load_questions_and_answers(questions_fp) # Load questions and answers from JSON file
+    questions, answers = load_questions_and_answers(questions_fp)
 
-    # Initialize session state for user answers and feedbacks if not already present
+    # Initialize session state
     if 'user_answers' not in st.session_state:
         st.session_state.user_answers = {q_id: "" for q_id in questions}
     if 'feedbacks' not in st.session_state:
         st.session_state.feedbacks = {q_id: "" for q_id in questions}
+    if 'current_question' not in st.session_state:
+        st.session_state.current_question = list(questions.keys())[0]
+    if 'submitted' not in st.session_state:
+        st.session_state.submitted = False
+    if 'last_question' not in st.session_state:
+        st.session_state.last_question = None
 
-    # Display questions, collect user answers, and show feedback
-    for question_id, question in questions.items():
-        st.markdown(f"<h3 style='color: white;'>{question}</h3>", unsafe_allow_html=True)
+    # Sidebar for question navigation
+    with st.sidebar:
+        st.title("Question Navigation")
+        for q_id in questions:
+            if st.button(f"Question {q_id}", key=f"nav_{q_id}"):
+                st.session_state.current_question = q_id
+
+    if not st.session_state.submitted:
+        # Display current question
+        current_q_id = st.session_state.current_question
+        st.markdown(f"<p class='big-font'>Question {current_q_id}</p>", unsafe_allow_html=True)
+        st.write(questions[current_q_id])
+
+        # Text area for user answer
         user_answer = st.text_area(
-            f"Your answer for {question_id}:",
-            value=st.session_state.user_answers[question_id],
-            key=f"answer_{question_id}"
+            "Your answer:",
+            value=st.session_state.user_answers[current_q_id],
+            key=f"answer_{current_q_id}"
         )
         
-        # Create a submit button for each question
-        if st.button(f"Submit Answer for {question_id}"):
-            st.session_state.user_answers[question_id] = user_answer
-            actual_answer = answers[question_id]
-            
-            # Add loading bar while generating feedback
-            with st.spinner("AI generating feedback..."):
-                relevant_content = get_relevant_content(collection, user_answer, actual_answer, question)
-                feedback = get_feedback(user_answer, question, relevant_content, actual_answer)
-            st.session_state.feedbacks[question_id] = feedback
+        # Submit button for current question
+        if st.button("Save Answer"):
+            st.session_state.user_answers[current_q_id] = user_answer
+            st.success("Answer saved!")
 
-        # Display feedback if available and submitted
-        if st.session_state.feedbacks[question_id]:
-            st.markdown(f"**AI Feedback:** {st.session_state.feedbacks[question_id]}")
+        # Next button
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Previous Question"):
+                current_index = list(questions.keys()).index(current_q_id)
+                if current_index > 0:
+                    st.session_state.last_question = current_q_id
+                    st.session_state.current_question = list(questions.keys())[current_index - 1]
+                    st.rerun()
+        with col2:
+            if st.button("Next Question"):
+                current_index = list(questions.keys()).index(current_q_id)
+                if current_index < len(questions) - 1:
+                    st.session_state.last_question = current_q_id
+                    st.session_state.current_question = list(questions.keys())[current_index + 1]
+                    st.rerun()
+
+        # Submit all button
+        if st.button("Submit All Questions"):
+            st.session_state.submitted = True
+            st.rerun()
+
+        # Clear the text area if moving to a new question
+        if st.session_state.last_question != st.session_state.current_question:
+            st.session_state.last_question = st.session_state.current_question
+            st.rerun()
+
+    else:
+        # Display all questions, answers, and generate feedback
+        st.markdown("<h2 style='color: #215732;'>Submission Summary</h2>", unsafe_allow_html=True)
+        
+        for q_id, question in questions.items():
+            st.markdown(f"<p class='big-font'>Question {q_id}</p>", unsafe_allow_html=True)
+            st.write(question)
+            st.write("Your Answer:")
+            st.write(st.session_state.user_answers[q_id])
+            
+            if not st.session_state.feedbacks[q_id]:
+                with st.spinner("Generating AI feedback..."):
+                    relevant_content = get_relevant_content(collection, st.session_state.user_answers[q_id], answers[q_id], question)
+                    feedback = get_feedback(st.session_state.user_answers[q_id], question, relevant_content, answers[q_id])
+                    st.session_state.feedbacks[q_id] = feedback
+            
+            st.markdown("**AI Feedback:**")
+            st.write(st.session_state.feedbacks[q_id])
+            st.markdown("---")
+
+        if st.button("Start Over"):
+            for key in ['user_answers', 'feedbacks', 'current_question', 'submitted', 'last_question']:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.rerun()
 
 if __name__ == "__main__":
     main()
