@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import PyPDF2
 import json
+import yaml
 from chromadb.utils import embedding_functions
 
 load_dotenv()
@@ -188,6 +189,11 @@ def get_relevant_content(collection, user_answer, actual_answer, question):
     relevant_content = "\n\n".join(results['documents'][0])
     return relevant_content if relevant_content else ""
 
+def load_prompts():
+    with open('prompts.yaml', 'r') as file:
+        return yaml.safe_load(file)
+
+
 def get_feedback(user_answer, question, relevant_content, actual_answer):
     """
     Generate feedback for a student's answer using AI.
@@ -214,24 +220,13 @@ def get_feedback(user_answer, question, relevant_content, actual_answer):
     - Feedback is tailored based on whether the student's answer aligns with the actual answer.
     - The AI uses only the provided information to generate feedback.
     """
-    prompt = f"""
-    Question: {question}
-    User Answer: {user_answer}
-    Actual Answer: {actual_answer}
-    Relevant Content: {relevant_content}
-
-    You are an administrator for this course and are a tutor for this assessment. You
-    are to only answer based on knowledge I'm providing you. The student is asked
-    "{question}" and you are to provide feedback on the student's answer. If the student's answer "{user_answer}" is not
-    inline with the actual answer "{actual_answer}", you are to provide feedback on the student's answer on how they can improve and where in the relevant content
-    they can review. If the student's answer is
-    inline with the actual answer, you are to provide feedback on the student's answer.
-    """
+    prompts = load_prompts()
+    feedback_prompt = prompts['feedback_prompt']
     response = ai_client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
+            {"role": "user", "content": feedback_prompt}
         ]
     )
     return response.choices[0].message.content
