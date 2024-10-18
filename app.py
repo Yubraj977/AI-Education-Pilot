@@ -221,7 +221,13 @@ def get_feedback(user_answer, question, relevant_content, actual_answer):
     - The AI uses only the provided information to generate feedback.
     """
     prompts = load_prompts()
-    feedback_prompt = prompts['feedback_prompt']
+   
+    feedback_prompt = prompts['feedback_prompt'].format(
+        question=question,
+        user_answer=user_answer,
+        actual_answer=actual_answer,
+        relevant_content=relevant_content
+    )
     response = ai_client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
