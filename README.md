@@ -21,8 +21,6 @@ This project is a Student Assessment Feedback System that uses AI to provide per
 
 2. Install the ODBC Driver: If you're on macOS, you need to install the ODBC driver to connect to Azure SQL Database. Run the following commands in your terminal:
    ```
-   bash
-   Copy code
    brew info unixodbc
    brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
    brew update
