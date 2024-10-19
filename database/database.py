@@ -1,127 +1,109 @@
-import sqlite3
+from sqlalchemy import text
 
+from database.models import (AIFeedback, Answer, Question, Session, Student,
+                             StudentAnswer)
 
-
-def init_db():
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    
-    # Create student_answers table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS student_answers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id INTEGER NOT NULL,
-            question_id INTEGER NOT NULL,
-            answer TEXT NOT NULL,
-            FOREIGN KEY (question_id) REFERENCES questions(id)
-        )
-    ''')
-    
-    # Create ai_feedback table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS ai_feedback (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            student_id INTEGER NOT NULL,
-            feedback TEXT NOT NULL,
-            FOREIGN KEY (student_id) REFERENCES students(id)
-        )
-    ''')
-
-    # Drop existing questions table if it exists
-    cursor.execute('DROP TABLE IF EXISTS questions')
-
-    # Create questions table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question_id TEXT NOT NULL,
-            question TEXT NOT NULL
-        )
-    ''')
-
-    cursor.execute('DROP TABLE IF EXISTS answers')
-
-    # Create answers table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS answers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question_id TEXT NOT NULL,
-            answer TEXT NOT NULL,
-            FOREIGN KEY (question_id) REFERENCES questions(question_id) 
-        )
-    ''')
-    conn.commit()
-    conn.close()
 
 def insert_question(question_id, question):
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO questions (question_id, question)
-        VALUES (?, ?)
-    ''', (question_id, question))
-    conn.commit()
-    conn.close()
+    # Check if the question already exists
+    session = Session()
+    existing_question = (
+        session.query(Question).filter_by(question_id=question_id).first()
+    )
+    if existing_question is None:
+        new_question = Question(question_id=question_id, question=question)
+        session.add(new_question)
+        session.commit()
+    else:
+        print(f"Question with ID {question_id} already exists. Skipping insertion.")
+
 
 def insert_answer(question_id, answer):
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO answers (question_id, answer)
-        VALUES (?, ?)
-    ''', (question_id, answer))
-    conn.commit()
-    conn.close()
+    session = Session()
+    existing_answer = (
+        session.query(Answer).filter_by(question_id=question_id, answer=answer).first()
+    )
+    if existing_answer is None:
+        new_answer = Answer(question_id=question_id, answer=answer)
+        session.add(new_answer)
+        session.commit()
+        print(f"Inserted answer: for question ID: {question_id}")
+    else:
+        print(
+            f"Answer for question ID {question_id} already exists. Skipping insertion."
+        )
+
+
+def insert_student(banner_id):
+    session = Session()
+    new_student = Student(banner_id=banner_id)
+    session.add(new_student)
+    session.commit()
+    student_id = new_student.id  # Get the generated student ID
+    session.close()  # Close the session
+    return student_id
+
 
 def insert_student_answer(student_id, question_id, answer):
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO student_answers (student_id, question_id, answer)
-        VALUES (?, ?, ?)
-    ''', (student_id, question_id, answer))
-    conn.commit()
-    conn.close()
+    session = Session()
+    try:
+        new_student_answer = StudentAnswer(
+            student_id=student_id, question_id=question_id, answer=answer
+        )
+        session.add(new_student_answer)
+        session.commit()
+    except Exception as e:
+        print(f"Error inserting student answer: {e}")
+    finally:
+        session.close()
+
 
 def get_student_answers(student_id):
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM student_answers WHERE student_id = ?', (student_id,))
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
+    session = Session()
+    answers = session.query(StudentAnswer).filter_by(student_id=student_id).all()
+    session.close()
+    return answers
+
 
 def insert_ai_feedback(student_id, feedback):
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-        INSERT INTO ai_feedback (student_id, feedback)
-        VALUES (?, ?)
-    ''', (student_id, feedback))
-    conn.commit()
-    conn.close()
+    session = Session()
+    try:
+        new_feedback = AIFeedback(student_id=student_id, feedback=feedback)
+        session.add(new_feedback)
+        session.commit()
+    except Exception as e:
+        print(f"Error inserting AI feedback: {e}")
+    finally:
+        session.close()
+
 
 def get_ai_feedback(student_id):
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM ai_feedback WHERE student_id = ?', (student_id,))
-    rows = cursor.fetchall()
-    conn.close()
-    return rows
+    session = Session()
+    feedback = session.query(AIFeedback).filter_by(student_id=student_id).all()
+    session.close()
+    return feedback
+
 
 def get_table_names():
-    conn = sqlite3.connect('pilot.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = cursor.fetchall()
-    
+    session = Session()
+    # Use text() for the main query
+    tables = session.execute(
+        text(
+            "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE';"
+        )
+    ).fetchall()
+
     table_columns = {}
     for table in tables:
         table_name = table[0]
-        cursor.execute(f"PRAGMA table_info({table_name})")
-        columns = cursor.fetchall()
-        column_names = [column[1] for column in columns]
+        # Use text() for the column names query
+        columns = session.execute(
+            text(
+                f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{table_name}'"
+            )
+        ).fetchall()
+        column_names = [column[0] for column in columns]
         table_columns[table_name] = column_names
-    
-    conn.close()
+
+    session.close()
     return table_columns
