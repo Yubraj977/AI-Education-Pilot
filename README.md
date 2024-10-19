@@ -41,8 +41,8 @@ This project is a Student Assessment Feedback System that uses AI to provide per
    Create a `.env` file in the project root and add your OpenAI API key:
    ```
    OPENAI_API_KEY=your_api_key_here
-   DB_USERNAME=acmsigai  # Add your database username
-   DB_PASSWORD=1L0V3ai!  # Add your database password
+   DB_USERNAME=your_db_usernmae
+   DB_PASSWORD=your_db_password
 
    ```
 
