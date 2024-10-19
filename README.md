@@ -19,21 +19,33 @@ This project is a Student Assessment Feedback System that uses AI to provide per
    cd student-assessment-feedback-system
    ```
 
-2. Create a virtual environment and activate it:
+2. Install the ODBC Driver: If you're on macOS, you need to install the ODBC driver to connect to Azure SQL Database. Run the following commands in your terminal:
+   ```
+   bash
+   Copy code
+   brew info unixodbc
+   brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
+   brew update
+   brew install msodbcsql18
+   ```
+3. Create a virtual environment and activate it:
    ```
    python -m venv venv
    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
    ```
 
-3. Install the required dependencies:
+4. Install the required dependencies:
    ```
    pip install -r requirements.txt
    ```
 
-4. Set up your environment variables:
+5. Set up your environment variables:
    Create a `.env` file in the project root and add your OpenAI API key:
    ```
    OPENAI_API_KEY=your_api_key_here
+   DB_USERNAME=acmsigai  # Add your database username
+   DB_PASSWORD=1L0V3ai!  # Add your database password
+
    ```
 
 ## Usage
