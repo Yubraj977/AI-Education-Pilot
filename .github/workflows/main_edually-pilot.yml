@@ -73,10 +73,6 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6156B9CDC10D409AA7CFCA4EB15A2026 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_643C3A5D8D46415ABAE3FE14D817B82E }}
 
-      - name: Configure deployment and runtime settings on the webapp
-        run: |
-        
-          az webapp config appsettings set --resource-group edually-pilot --name edually-pilot --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
