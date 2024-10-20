@@ -50,7 +50,7 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
+      id-token: write # Required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
@@ -61,13 +61,12 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_9F429DE4C27947019BFE7EE129D3244B }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A1F0942D95B6414D95D8DFA5875E84AE }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_12D8E465323C43F69D6820E3EFA1915C }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
@@ -75,4 +74,3 @@ jobs:
         with:
           app-name: 'edually-pilot'
           slot-name: 'Production'
-          
