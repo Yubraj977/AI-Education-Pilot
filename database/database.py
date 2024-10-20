@@ -1,4 +1,4 @@
-from sqlalchemy import text
+from sqlalchemy import text, func
 
 from database.models import (AIFeedback, Answer, Question, Session, Student,
                              StudentAnswer)
@@ -44,11 +44,11 @@ def insert_student(banner_id):
     return student_id
 
 
-def insert_student_answer(student_id, question_id, answer):
+def insert_student_answer(student_id, question_id, answer, attempt):
     session = Session()
     try:
         new_student_answer = StudentAnswer(
-            student_id=student_id, question_id=question_id, answer=answer
+            student_id=student_id, question_id=question_id, answer=answer, attempt=attempt
         )
         session.add(new_student_answer)
         session.commit()
@@ -107,3 +107,37 @@ def get_table_names():
 
     session.close()
     return table_columns
+
+def get_current_attempt(student_id):
+    session = Session()
+    try:
+        max_attempt = session.query(func.max(StudentAnswer.attempt)).filter(StudentAnswer.student_id == student_id).scalar()
+        return max_attempt + 1 if max_attempt is not None else 1
+    except Exception as e:
+        print(f"Error getting current attempt: {e}")
+        return 1
+    finally:
+        session.close()
+
+def get_or_create_student(banner_id):
+    session = Session()
+    try:
+        student = session.query(Student).filter_by(banner_id=banner_id).first()
+        if student is None:
+            new_student = Student(banner_id=banner_id, current_attempt=1)
+            session.add(new_student)
+            session.commit()
+            return new_student.id, new_student.current_attempt, True
+        return student.id, student.current_attempt, False
+    finally:
+        session.close()
+
+def update_student_attempt(student_id, new_attempt):
+    session = Session()
+    try:
+        student = session.query(Student).filter_by(id=student_id).first()
+        if student:
+            student.current_attempt = new_attempt
+            session.commit()
+    finally:
+        session.close()

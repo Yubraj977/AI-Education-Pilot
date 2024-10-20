@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, create_engine, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -29,6 +29,7 @@ class Student(Base):
     __tablename__ = "students"
     id = Column(Integer, primary_key=True, autoincrement=True)
     banner_id = Column(String(100), nullable=False)  # Add more fields as necessary
+    current_attempt = Column(Integer, default=1)
 
 
 class StudentAnswer(Base):
@@ -39,6 +40,8 @@ class StudentAnswer(Base):
         String(50), ForeignKey("questions.question_id"), nullable=False
     )
     answer = Column(Text, nullable=False)
+    attempt = Column(Integer, nullable=False, default=1)
+
 
 
 class AIFeedback(Base):
