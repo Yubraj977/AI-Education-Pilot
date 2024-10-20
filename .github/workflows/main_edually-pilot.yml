@@ -77,7 +77,9 @@ jobs:
         run: |
           az configure --defaults group=${{ env.RESOURCE_GROUP }}
 
-          az webapp config appsettings set --name ${{ env.WEBAPP_NAME }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+          az webapp config appsettings set --resource-group ${{ env.RESOURCE_GROUP }} \
+              --name ${{ env.WEBAPP_NAME }} \
+              --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
