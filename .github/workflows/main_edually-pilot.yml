@@ -76,10 +76,8 @@ jobs:
       - name: Configure deployment and runtime settings on the webapp
         run: |
           az configure --defaults group=${{ env.RESOURCE_GROUP }}
-          
-          az webapp config appsettings --name ${{ env.WEBAPP_NAME }} --settings \
-              SCM_DO_BUILD_DURING_DEPLOYMENT=true \
-              SCM_COMMAND_IDLE_TIMEOUT=600 # Optional: Increase timeout if needed 
+
+          az webapp config appsettings set --name ${{ env.WEBAPP_NAME }} --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
