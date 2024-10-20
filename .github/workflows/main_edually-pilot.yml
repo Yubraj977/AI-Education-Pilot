@@ -73,6 +73,14 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_6156B9CDC10D409AA7CFCA4EB15A2026 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_643C3A5D8D46415ABAE3FE14D817B82E }}
 
+      - name: Configure deployment and runtime settings on the webapp
+        run: |
+          az configure --defaults group=${{ env.RESOURCE_GROUP }}
+          
+          az webapp config appsettings --name ${{ env.WEBAPP_NAME }} --settings \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+              SCM_COMMAND_IDLE_TIMEOUT=600 # Optional: Increase timeout if needed 
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
