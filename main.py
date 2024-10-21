@@ -200,15 +200,12 @@ def main(collection, questions_fp, ai_client):
                     st.success(f"New student record created. You are starting attempt 1.")
                 else:
                     st.success(f"Returning student found. You are on attempt {current_attempt}.")
-                st.button("Start Test", on_click=start_test, args=(collection, questions, answers, ai_client))
             else:
                 st.error("Please enter a valid Banner ID.")
         return
-
-def start_test(collection, questions, answers, ai_client):
+    
     # Display current attempt
     st.write(f"Current attempt: {st.session_state.current_attempt}")
-
     # Handle different attempts
     if st.session_state.current_attempt == 1:
         first_attempt_flow(collection, questions, answers, ai_client)
