@@ -190,8 +190,8 @@ def main(collection, questions_fp, ai_client):
 
     # Input for Banner ID
     if st.session_state.student_id is None:
-        banner_id = st.text_input("Enter the last four of your Banner ID:")
-        if st.button("Submit Banner ID"):
+        banner_id = st.text_input("Enter the last four digits of your Banner ID:")
+        if st.button("Submit"):
             if banner_id:
                 student_id, current_attempt, is_new_student = get_or_create_student(banner_id)
                 st.session_state.student_id = student_id
