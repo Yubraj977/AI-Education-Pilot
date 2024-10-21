@@ -16,6 +16,13 @@ def first_attempt_flow(collection, questions, answers, ai_client):
     if "submitted" not in st.session_state:
         st.session_state.submitted = False
 
+     # Sidebar for question navigation
+    with st.sidebar:
+        st.title("Question Navigation")
+        for q_id in questions:
+            if st.button(f"Question {q_id}", key=f"nav_{q_id}"):
+                st.session_state.current_question = q_id
+
     if not st.session_state.submitted:
         # Display current question
         current_q_id = st.session_state.current_question
@@ -107,6 +114,13 @@ def second_attempt_flow(questions):
 
     st.write("This is your second assessment attempt, your submitted answers will be final.")
 
+     # Sidebar for question navigation
+    with st.sidebar:
+        st.title("Question Navigation")
+        for q_id in questions:
+            if st.button(f"Question {q_id}", key=f"nav_{q_id}"):
+                st.session_state.current_question = q_id
+
     if not st.session_state.submitted:
         current_q_id = st.session_state.current_question
         st.markdown(f"<p class='big-font'>Question {current_q_id}</p>", unsafe_allow_html=True)
@@ -186,10 +200,12 @@ def main(collection, questions_fp, ai_client):
                     st.success(f"New student record created. You are starting attempt 1.")
                 else:
                     st.success(f"Returning student found. You are on attempt {current_attempt}.")
+                st.button("Start Test", on_click=start_test, args=(collection, questions, answers, ai_client))
             else:
                 st.error("Please enter a valid Banner ID.")
         return
 
+def start_test(collection, questions, answers, ai_client):
     # Display current attempt
     st.write(f"Current attempt: {st.session_state.current_attempt}")
 
