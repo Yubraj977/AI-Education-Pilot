@@ -8,9 +8,9 @@ from utils import (get_feedback, get_or_create_chroma_collection,
 
 def first_attempt_flow(collection, questions, answers, ai_client):
     if "user_answers" not in st.session_state:
-        st.session_state.user_answers = {q_id: "" for q_id in questions}
+        st.session_state.user_answers = {q_id: "" for q_id in questions if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']}
     if "feedbacks" not in st.session_state:
-        st.session_state.feedbacks = {q_id: "" for q_id in questions}
+        st.session_state.feedbacks = {q_id: "" for q_id in questions if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']}
     if "current_question" not in st.session_state:
         st.session_state.current_question = list(questions.keys())[0]
     if "submitted" not in st.session_state:
@@ -20,6 +20,7 @@ def first_attempt_flow(collection, questions, answers, ai_client):
     with st.sidebar:
         st.title("Question Navigation")
         for q_id in questions:
+         if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']:
             if st.button(f"Question {q_id}", key=f"nav_{q_id}"):
                 st.session_state.current_question = q_id
 
@@ -53,7 +54,7 @@ def first_attempt_flow(collection, questions, answers, ai_client):
         with col2:
             if st.button("Next Question"):
                 current_index = list(questions.keys()).index(current_q_id)
-                if current_index < len(questions) - 1:
+                if current_index < len(questions) - 1 and list(questions.keys())[current_index + 1] in  ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']:
                     st.session_state.current_question = list(questions.keys())[current_index + 1]
                     st.rerun()
 
@@ -69,33 +70,34 @@ def first_attempt_flow(collection, questions, answers, ai_client):
         # Display all questions, answers, and generate feedback
         st.markdown("<h2 style='color: #215732;'>Submission Summary</h2>", unsafe_allow_html=True)
 
-        for q_id, question in questions.items():
-            st.markdown(f"<p class='big-font'>Question {q_id}</p>", unsafe_allow_html=True)
-            st.write(question)
-            st.write("Your Answer:")
-            st.write(st.session_state.user_answers[q_id])
+        for q_id in questions:
+            if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']:
+                st.markdown(f"<p class='big-font'>Question {q_id}</p>", unsafe_allow_html=True)
+                st.write(questions[q_id])
+                st.write("Your Answer:")
+                st.write(st.session_state.user_answers[q_id])
 
-            if not st.session_state.feedbacks[q_id]:
-                with st.spinner("Generating AI feedback..."):
-                    relevant_content = get_relevant_content(
-                        collection,
-                        st.session_state.user_answers[q_id],
-                        answers[q_id],
-                        question,
-                    )
-                    feedback = get_feedback(
-                        ai_client,
-                        st.session_state.user_answers[q_id],
-                        question,
-                        relevant_content,
-                        answers[q_id],
-                    )
-                    st.session_state.feedbacks[q_id] = feedback
-                    insert_ai_feedback(st.session_state.student_id, feedback)
+                if not st.session_state.feedbacks[q_id]:
+                    with st.spinner("Generating AI feedback..."):
+                        relevant_content = get_relevant_content(
+                            collection,
+                            st.session_state.user_answers[q_id],
+                            answers[q_id],
+                            questions[q_id],
+                        )
+                        feedback = get_feedback(
+                            ai_client,
+                            st.session_state.user_answers[q_id],
+                            questions[q_id],
+                            relevant_content,
+                            answers[q_id],
+                        )
+                        st.session_state.feedbacks[q_id] = feedback
+                        insert_ai_feedback(st.session_state.student_id, feedback)
 
-            st.markdown("**AI Feedback:**")
-            st.write(st.session_state.feedbacks[q_id])
-            st.markdown("---")
+                st.markdown("**AI Feedback:**")
+                st.write(st.session_state.feedbacks[q_id])
+                st.markdown("---")
 
         st.write("You have completed the first attempt. You can now close the window and return later for your second attempt, or start your second attempt now.")
         if st.button("Start Second Attempt"):
