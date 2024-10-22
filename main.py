@@ -5,6 +5,13 @@ from database.database import (get_ai_feedback, get_student_answers,
                                update_student_attempt)
 from utils import (get_feedback, get_or_create_chroma_collection,
                    get_relevant_content, load_questions_and_answers)
+import time
+
+@st.cache_resource
+def initialize_resources(_questions_fp):
+    questions, answers = load_questions_and_answers(_questions_fp)
+    return questions, answers
+
 
 def first_attempt_flow(collection, questions, answers, ai_client):
     if "user_answers" not in st.session_state:
@@ -160,6 +167,7 @@ def second_attempt_flow(questions):
         st.write("You have completed both attempts of the assessment.")
 
 def main(collection, questions_fp, ai_client):
+    questions, answers = initialize_resources(questions_fp)    
     # Brockport green color scheme
     st.markdown(
         """
@@ -181,14 +189,12 @@ def main(collection, questions_fp, ai_client):
         unsafe_allow_html=True,
     )
 
-    st.title("SUNY Brockport Student Assessment Feedback System")
+    st.title("Autism Spectrum Disorder (Part 1): An Overview for Educators")
 
     if "student_id" not in st.session_state:
         st.session_state.student_id = None
     if "current_attempt" not in st.session_state:
         st.session_state.current_attempt = None
-
-    questions, answers = load_questions_and_answers(questions_fp)
 
     # Input for Banner ID
     if st.session_state.student_id is None:
