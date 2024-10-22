@@ -44,7 +44,7 @@ def load_questions_and_answers(json_path):
 
 def get_relevant_content(collection, user_answer, actual_answer, question):
     combined_query = f"{question} {user_answer} {actual_answer}"
-    results = collection.query(query_texts=[combined_query], n_results=3)
+    results = collection.query(query_texts=[combined_query], n_results=10)
     relevant_content = "\n\n".join(results["documents"][0])
     return relevant_content if relevant_content else ""
 
@@ -57,20 +57,72 @@ def load_prompts():
 def get_feedback(ai_client, user_answer, question, relevant_content, actual_answer):
     prompts = load_prompts()
 
+    # Prepare the feedback prompt
     feedback_prompt = prompts["feedback_prompt"].format(
         question=question,
         user_answer=user_answer,
-        actual_answer=actual_answer,
-        relevant_content=relevant_content,
     )
-    response = ai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
+
+    # System prompt for feedback
+    feedback_system_prompt = f"""
+    You are an expert educator providing constructive feedback to students.
+    Use the following information to inform your feedback:
+
+    Actual Answer:
+    {actual_answer}
+
+    Relevant Course Content:
+    {relevant_content}
+
+    Provide brief feedback in 2-3 sentences, focusing on key strengths and areas for improvement. Your response should not exceed 150 tokens, so keep it short.
+
+    """
+
+    # Call the AI API for feedback
+    feedback_response = ai_client.chat.completions.create(
+        model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "system", "content": feedback_system_prompt},
             {"role": "user", "content": feedback_prompt},
         ],
+        temperature=0.5,
+        max_tokens=500,
     )
-    return response.choices[0].message.content
+
+    feedback = feedback_response.choices[0].message.content.strip()
+
+    # Prepare the grading prompt
+    grading_prompt = prompts["grading_prompt"].format(
+        question=question,
+        user_answer=user_answer,
+    )
+
+    # System prompt for grading
+    grading_system_prompt = f"""
+    You are an expert grader assessing student answers based on their alignment with the actual answer.
+
+    Actual Answer:
+    {actual_answer}
+    """
+
+    # Call the AI API for grading
+    grading_response = ai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": grading_system_prompt},
+            {"role": "user", "content": grading_prompt},
+        ],
+        temperature=0.0,
+        max_tokens=5,
+    )
+
+    grade = grading_response.choices[0].message.content.strip()
+
+    # Combine feedback and grade
+    formatted_response = f"**Feedback:** {feedback}\n\n**Grade:** {grade}"
+    return formatted_response
+
+
 
 
 @st.cache_resource
