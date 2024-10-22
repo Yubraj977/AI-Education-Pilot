@@ -153,3 +153,12 @@ def get_or_create_chroma_collection(_db_client, module_content_fp, _ai_client):
         print("New collection created and embeddings added to ChromaDB.")
 
     return collection
+
+def group_question(questions):
+    grouped = {}
+    for q_id, question in questions.items():
+        base_id = q_id[0]  # Get the first character of the question ID
+        if base_id not in grouped:
+            grouped[base_id] = []
+        grouped[base_id].append((q_id, question))  # Append a tuple instead of two separate arguments
+    return grouped

@@ -4,7 +4,7 @@ from database.database import (get_ai_feedback, get_student_answers,
                                get_current_attempt, get_or_create_student, 
                                update_student_attempt)
 from utils import (get_feedback, get_or_create_chroma_collection,
-                   get_relevant_content, load_questions_and_answers)
+                   get_relevant_content, load_questions_and_answers, group_question)
 import time
 
 @st.cache_resource
@@ -14,55 +14,57 @@ def initialize_resources(_questions_fp):
 
 
 def first_attempt_flow(collection, questions, answers, ai_client):
+    # Filter questions for first attempt
+    first_attempt_questions = {k: v for k, v in questions.items() if k not in ['6', '7']}
+    grouped_questions = group_question(first_attempt_questions)
+    
     if "user_answers" not in st.session_state:
-        st.session_state.user_answers = {q_id: "" for q_id in questions if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']}
+        st.session_state.user_answers = {q_id: "" for q_id in first_attempt_questions}
     if "feedbacks" not in st.session_state:
-        st.session_state.feedbacks = {q_id: "" for q_id in questions if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']}
-    if "current_question" not in st.session_state:
-        st.session_state.current_question = list(questions.keys())[0]
+        st.session_state.feedbacks = {q_id: "" for q_id in first_attempt_questions}
+    if "current_question_group" not in st.session_state:
+        st.session_state.current_question_group = list(grouped_questions.keys())[0]
     if "submitted" not in st.session_state:
         st.session_state.submitted = False
 
-     # Sidebar for question navigation
+    # Sidebar for question navigation
     with st.sidebar:
         st.title("Question Navigation")
-        for q_id in questions:
-         if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']:
-            if st.button(f"Question {q_id}", key=f"nav_{q_id}"):
-                st.session_state.current_question = q_id
+        for group_id in grouped_questions:
+            if st.button(f"Question {group_id}", key=f"nav_{group_id}"):
+                st.session_state.current_question_group = group_id
 
     if not st.session_state.submitted:
-        # Display current question
-        current_q_id = st.session_state.current_question
-        st.markdown(f"<p class='big-font'>Question {current_q_id}</p>", unsafe_allow_html=True)
-        st.write(questions[current_q_id])
+        # Display current question group
+        current_group = st.session_state.current_question_group
+        st.markdown(f"<p class='big-font'>Question {current_group}</p>", unsafe_allow_html=True)
+        
+        with st.form(key=f"form_{current_group}"):
+            for q_id, question in grouped_questions[current_group]:
+                st.write(question)
+                user_answer = st.text_area(
+                    f"Your answer for {q_id}:",
+                    value=st.session_state.user_answers[q_id],
+                    key=f"answer_{q_id}",
+                )
+                if st.form_submit_button(f"Save Answer for {q_id}"):
+                    st.session_state.user_answers[q_id] = user_answer
+                    insert_student_answer(st.session_state.student_id, q_id, user_answer, attempt=1)
+                    st.success(f"Answer for {q_id} saved!")
 
-        # Text area for user answer
-        user_answer = st.text_area(
-            "Your answer:",
-            value=st.session_state.user_answers[current_q_id],
-            key=f"answer_{current_q_id}",
-        )
-
-        # Save answer button
-        if st.button("Save Answer"):
-            st.session_state.user_answers[current_q_id] = user_answer
-            insert_student_answer(st.session_state.student_id, current_q_id, user_answer, attempt=1)
-            st.success("Answer saved!")
-
-        # Navigation buttons
+        # Navigation buttons (outside the form)
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Previous Question"):
-                current_index = list(questions.keys()).index(current_q_id)
+                current_index = list(grouped_questions.keys()).index(current_group)
                 if current_index > 0:
-                    st.session_state.current_question = list(questions.keys())[current_index - 1]
+                    st.session_state.current_question_group = list(grouped_questions.keys())[current_index - 1]
                     st.rerun()
         with col2:
             if st.button("Next Question"):
-                current_index = list(questions.keys()).index(current_q_id)
-                if current_index < len(questions) - 1 and list(questions.keys())[current_index + 1] in  ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']:
-                    st.session_state.current_question = list(questions.keys())[current_index + 1]
+                current_index = list(grouped_questions.keys()).index(current_group)
+                if current_index < len(grouped_questions) - 1:
+                    st.session_state.current_question_group = list(grouped_questions.keys())[current_index + 1]
                     st.rerun()
 
         # Submit all button
@@ -77,10 +79,10 @@ def first_attempt_flow(collection, questions, answers, ai_client):
         # Display all questions, answers, and generate feedback
         st.markdown("<h2 style='color: #215732;'>Submission Summary</h2>", unsafe_allow_html=True)
 
-        for q_id in questions:
-            if q_id in ['1', '2a', '2b', '3a', '3b', '3c', '4', '5']:
+        for group_id, group_questions in grouped_questions.items():
+            for q_id, question in group_questions:
                 st.markdown(f"<p class='big-font'>Question {q_id}</p>", unsafe_allow_html=True)
-                st.write(questions[q_id])
+                st.write(question)
                 st.write("Your Answer:")
                 st.write(st.session_state.user_answers[q_id])
 
@@ -90,12 +92,12 @@ def first_attempt_flow(collection, questions, answers, ai_client):
                             collection,
                             st.session_state.user_answers[q_id],
                             answers[q_id],
-                            questions[q_id],
+                            question,
                         )
                         feedback = get_feedback(
                             ai_client,
                             st.session_state.user_answers[q_id],
-                            questions[q_id],
+                            question,
                             relevant_content,
                             answers[q_id],
                         )
@@ -108,53 +110,61 @@ def first_attempt_flow(collection, questions, answers, ai_client):
 
         st.write("You have completed the first attempt. You can now close the window and return later for your second attempt, or start your second attempt now.")
         if st.button("Start Second Attempt"):
-            for key in ["user_answers", "feedbacks", "current_question", "submitted"]:
+            for key in ["user_answers", "feedbacks", "current_question_group", "submitted"]:
                 if key in st.session_state:
                     del st.session_state[key]
             st.rerun()
 
 def second_attempt_flow(questions):
+    # Include all questions for second attempt
+    grouped_questions = group_question(questions)
+    
     if "user_answers" not in st.session_state:
         st.session_state.user_answers = {q_id: "" for q_id in questions}
-    if "current_question" not in st.session_state:
-        st.session_state.current_question = list(questions.keys())[0]
+    if "current_question_group" not in st.session_state:
+        st.session_state.current_question_group = list(grouped_questions.keys())[0]
     if "submitted" not in st.session_state:
         st.session_state.submitted = False
 
     st.write("This is your second assessment attempt, your submitted answers will be final.")
 
-     # Sidebar for question navigation
+    # Sidebar for question navigation
     with st.sidebar:
         st.title("Question Navigation")
-        for q_id in questions:
-            if st.button(f"Question {q_id}", key=f"nav_{q_id}"):
-                st.session_state.current_question = q_id
+        for group_id in grouped_questions:
+            if st.button(f"Question {group_id}", key=f"nav_second_{group_id}"):
+                st.session_state.current_question_group = group_id
 
     if not st.session_state.submitted:
-        current_q_id = st.session_state.current_question
-        st.markdown(f"<p class='big-font'>Question {current_q_id}</p>", unsafe_allow_html=True)
-        st.write(questions[current_q_id])
-
-        user_answer = st.text_area("Your answer:", value=st.session_state.user_answers[current_q_id], key=f"second_attempt_{current_q_id}")
-
-        if st.button("Save Answer"):
-            st.session_state.user_answers[current_q_id] = user_answer
-            insert_student_answer(st.session_state.student_id, current_q_id, user_answer, attempt=2)
-            st.success("Answer saved!")
+        current_group = st.session_state.current_question_group
+        st.markdown(f"<p class='big-font'>Question {current_group}</p>", unsafe_allow_html=True)
+        
+        with st.form(key=f"form_second_{current_group}"):
+            for q_id, question in grouped_questions[current_group]:
+                st.write(question)
+                user_answer = st.text_area(
+                    f"Your answer for {q_id}:",
+                    value=st.session_state.user_answers[q_id],
+                    key=f"second_attempt_{q_id}",
+                )
+                if st.form_submit_button(f"Save Answer for {q_id}"):
+                    st.session_state.user_answers[q_id] = user_answer
+                    insert_student_answer(st.session_state.student_id, q_id, user_answer, attempt=2)
+                    st.success(f"Answer for {q_id} saved!")
 
         # Navigation buttons
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Previous Question"):
-                current_index = list(questions.keys()).index(current_q_id)
+                current_index = list(grouped_questions.keys()).index(current_group)
                 if current_index > 0:
-                    st.session_state.current_question = list(questions.keys())[current_index - 1]
+                    st.session_state.current_question_group = list(grouped_questions.keys())[current_index - 1]
                     st.rerun()
         with col2:
             if st.button("Next Question"):
-                current_index = list(questions.keys()).index(current_q_id)
-                if current_index < len(questions) - 1:
-                    st.session_state.current_question = list(questions.keys())[current_index + 1]
+                current_index = list(grouped_questions.keys()).index(current_group)
+                if current_index < len(grouped_questions) - 1:
+                    st.session_state.current_question_group = list(grouped_questions.keys())[current_index + 1]
                     st.rerun()
 
         if st.button("Submit All Answers"):
@@ -216,17 +226,20 @@ def main(collection, questions_fp, ai_client):
                 st.error("Please enter a valid Banner ID.")
         return
     
-    # Display current attempt
-    st.write(f"Current attempt: {st.session_state.current_attempt}")
     # Handle different attempts
     if st.session_state.current_attempt == 1:
+        st.write("Current attempt: 1")
         first_attempt_flow(collection, questions, answers, ai_client)
     elif st.session_state.current_attempt == 2:
         if "submitted" in st.session_state and st.session_state.submitted:
             # If the first attempt was just submitted, show the feedback
+            st.write("First attempt feedback:")
             first_attempt_flow(collection, questions, answers, ai_client)
         else:
             # Otherwise, start the second attempt
+            st.write("Current attempt: 2")
             second_attempt_flow(questions)
     else:
         st.write("You have completed both attempts of the assessment.")
+        # Display a summary or final message here
+        st.write("Thank you for completing the assessment. Your responses have been recorded.")
