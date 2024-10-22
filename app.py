@@ -7,7 +7,10 @@ from database.database import get_table_names, insert_answer, insert_question
 from utils import get_or_create_chroma_collection, load_questions_and_answers
 
 # Set page configuration
-st.set_page_config(layout="wide")
+st.set_page_config(
+    page_title="Brockport Autism Assessment",
+    page_icon="🦅",
+    layout="wide")
 
 load_dotenv()
 
