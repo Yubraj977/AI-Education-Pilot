@@ -43,10 +43,23 @@ def load_questions_and_answers(json_path):
 
 
 def get_relevant_content(collection, user_answer, actual_answer, question):
-    combined_query = f"{question} {user_answer} {actual_answer}"
-    results = collection.query(query_texts=[combined_query], n_results=10)
-    relevant_content = "\n\n".join(results["documents"][0])
-    return relevant_content if relevant_content else ""
+     # Create separate queries for clarity
+    user_answer_query = f"Relevant content for: '{user_answer}' regarding the question: '{question}'"
+    actual_answer_query = f"Key concepts related to the correct answer: '{actual_answer}' for the question: '{question}'"
+    
+    # Combine the queries into a list for better context
+    queries = [user_answer_query, actual_answer_query]
+
+    # Perform the queries and collect results
+    results = collection.query(query_texts=queries, n_results=5)
+
+    # Extract relevant documents from results
+    relevant_content = []
+    for i, query in enumerate(queries):
+        relevant_content.append("\n\n".join(results["documents"][i]))
+
+    # Return content focusing on what the student missed
+    return relevant_content if any(relevant_content) else ""
 
 
 def load_prompts():
@@ -85,7 +98,7 @@ def get_feedback(ai_client, user_answer, question, relevant_content, actual_answ
             {"role": "system", "content": feedback_system_prompt},
             {"role": "user", "content": feedback_prompt},
         ],
-        temperature=0.5,
+        temperature=0.1,
         max_tokens=500,
     )
 
@@ -112,7 +125,7 @@ def get_feedback(ai_client, user_answer, question, relevant_content, actual_answ
             {"role": "system", "content": grading_system_prompt},
             {"role": "user", "content": grading_prompt},
         ],
-        temperature=0.0,
+        temperature=0.1,
         max_tokens=5,
     )
 
