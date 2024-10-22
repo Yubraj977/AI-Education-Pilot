@@ -86,26 +86,33 @@ def first_attempt_flow(collection, questions, answers, ai_client):
                 st.write("Your Answer:")
                 st.write(st.session_state.user_answers[q_id])
 
-                if not st.session_state.feedbacks[q_id]:
-                    with st.spinner("Generating AI feedback..."):
-                        relevant_content = get_relevant_content(
-                            collection,
-                            st.session_state.user_answers[q_id],
-                            answers[q_id],
-                            question,
-                        )
-                        feedback = get_feedback(
-                            ai_client,
-                            st.session_state.user_answers[q_id],
-                            question,
-                            relevant_content,
-                            answers[q_id],
-                        )
-                        st.session_state.feedbacks[q_id] = feedback
-                        insert_ai_feedback(st.session_state.student_id, feedback)
+                if st.session_state.user_answers[q_id].strip():
 
-                st.markdown("**AI Feedback:**")
-                st.write(st.session_state.feedbacks[q_id])
+                    if not st.session_state.feedbacks[q_id]:
+                        with st.spinner("Generating AI feedback..."):
+                            relevant_content = get_relevant_content(
+                                collection,
+                                st.session_state.user_answers[q_id],
+                                answers[q_id],
+                                question,
+                            )
+                            feedback = get_feedback(
+                                ai_client,
+                                st.session_state.user_answers[q_id],
+                                question,
+                                relevant_content,
+                                answers[q_id],
+                            )
+                            st.session_state.feedbacks[q_id] = feedback
+                            insert_ai_feedback(st.session_state.student_id, feedback)
+
+            
+                    st.markdown("**AI Feedback:**")
+                    st.write(st.session_state.feedbacks[q_id])
+
+                else:
+                    st.markdown("**AI Feedback:** No feedback generated for blank answer.")
+
                 st.markdown("---")
 
         st.write("You have completed the first attempt. You can now close the window and return later for your second attempt, or start your second attempt now.")
