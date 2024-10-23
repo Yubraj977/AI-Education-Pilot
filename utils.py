@@ -43,19 +43,17 @@ def load_questions_and_answers(json_path):
 
 def get_relevant_content(collection, user_answer, actual_answer, question):
      # Create separate queries for clarity
-    user_answer_query = f"Relevant content for: '{user_answer}' regarding the question: '{question}'"
-    actual_answer_query = f"Key concepts related to the correct answer: '{actual_answer}' for the question: '{question}'"
+    combined_query = f"{actual_answer}{question}"
+    
     
     # Combine the queries into a list for better context
-    queries = [user_answer_query, actual_answer_query]
+    
 
     # Perform the queries and collect results
-    results = collection.query(query_texts=queries, n_results=5)
+    results = collection.query(query_texts=combined_query, n_results=5)
 
     # Extract relevant documents from results
-    relevant_content = []
-    for i, query in enumerate(queries):
-        relevant_content.append("\n\n".join(results["documents"][i]))
+    relevant_content = ("\n\n".join(results["documents"][0]))
 
     # Return content focusing on what the student missed
     return relevant_content if any(relevant_content) else ""
@@ -142,7 +140,7 @@ def get_or_create_chroma_collection(_db_client, module_content_fp, _ai_client):
     collection_name = "module_content"
 
     embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-        api_key=os.getenv("OPENAI_API_KEY"), model_name="text-embedding-ada-002"
+        api_key=os.getenv("OPENAI_API_KEY2"), model_name="text-embedding-ada-002"
     )
 
     try:
