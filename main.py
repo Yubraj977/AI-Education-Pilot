@@ -68,7 +68,7 @@ def first_attempt_flow(collection, questions, answers, ai_client):
                     st.rerun()
 
         # Submit all button
-        if st.button("Submit All Answers"):
+        if st.button("Submit Assessment"):
             st.session_state.submitted = True
             st.session_state.current_attempt = 2
             update_student_attempt(st.session_state.student_id, 2)
@@ -77,17 +77,16 @@ def first_attempt_flow(collection, questions, answers, ai_client):
 
     else:
         # Display all questions, answers, and generate feedback
-        st.markdown("<h2 style='color: #215732;'>Submission Summary</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='color: #215732;'>Submission Evaluation</h2>", unsafe_allow_html=True)
 
         for group_id, group_questions in grouped_questions.items():
             for q_id, question in group_questions:
-                st.markdown(f"<p class='big-font'>Question {q_id}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='font-size: 20px; font-weight: bold; color: #00533E;'>Question {q_id}</p>", unsafe_allow_html=True)
                 st.write(question)
-                st.write("Your Answer:")
+                st.markdown("<p style='font-size: 18px; font-weight: bold; color: #00533E;'>Your Answer:</p>", unsafe_allow_html=True)
                 st.write(st.session_state.user_answers[q_id])
 
                 if st.session_state.user_answers[q_id].strip():
-
                     if not st.session_state.feedbacks[q_id]:
                         with st.spinner("Generating AI feedback..."):
                             relevant_content = get_relevant_content(
@@ -106,12 +105,11 @@ def first_attempt_flow(collection, questions, answers, ai_client):
                             st.session_state.feedbacks[q_id] = feedback
                             insert_ai_feedback(st.session_state.student_id, feedback)
 
-            
-                    st.markdown("**AI Feedback:**")
+                    st.markdown("<p style='font-size: 18px; font-weight: bold; color: #00533E;'>AI Feedback:</p>", unsafe_allow_html=True)
                     st.write(st.session_state.feedbacks[q_id])
-
                 else:
-                    st.markdown("**AI Feedback:** No feedback generated for blank answer.")
+                    st.markdown("<p style='font-size: 18px; font-weight: bold; color: #00533E;'>AI Feedback:</p>", unsafe_allow_html=True)
+                    st.write("No feedback generated for blank answer.")
 
                 st.markdown("---")
 
@@ -174,7 +172,7 @@ def second_attempt_flow(questions):
                     st.session_state.current_question_group = list(grouped_questions.keys())[current_index + 1]
                     st.rerun()
 
-        if st.button("Submit All Answers"):
+        if st.button("Submit Assessment"):
             st.session_state.submitted = True
             st.session_state.current_attempt = 3
             update_student_attempt(st.session_state.student_id, 3)
@@ -236,6 +234,7 @@ def main(collection, questions_fp, ai_client):
     # Handle different attempts
     if st.session_state.current_attempt == 1:
         st.write("Current attempt: 1")
+        st.markdown("<p class='instruction'>Be sure to save your answer before moving to the next question, or you will lose your progress. Answers will only be submitted after you have clicked the 'Submit Assessment' button.</p>", unsafe_allow_html=True)
         first_attempt_flow(collection, questions, answers, ai_client)
     elif st.session_state.current_attempt == 2:
         if "submitted" in st.session_state and st.session_state.submitted:
@@ -245,6 +244,7 @@ def main(collection, questions_fp, ai_client):
         else:
             # Otherwise, start the second attempt
             st.write("Current attempt: 2")
+            st.markdown("<p class='instruction'>Be sure to save your answer before moving to the next question, or you will lose your progress. Answers will only be submitted after you have clicked the 'Submit Assessment' button.</p>", unsafe_allow_html=True)
             second_attempt_flow(questions)
     else:
         st.write("You have completed both attempts of the assessment.")
