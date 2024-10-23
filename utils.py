@@ -41,7 +41,6 @@ def load_questions_and_answers(json_path):
     questions = {k: f"{k}: {v}" for k, v in data["questions"].items()}
     return questions, data["answers"]
 
-
 def get_relevant_content(collection, user_answer, actual_answer, question):
      # Create separate queries for clarity
     user_answer_query = f"Relevant content for: '{user_answer}' regarding the question: '{question}'"
