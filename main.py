@@ -162,17 +162,19 @@ def second_attempt_flow(questions):
         # Navigation buttons
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("Previous Question"):
-                current_index = list(grouped_questions.keys()).index(current_group)
-                if current_index > 0:
-                    st.session_state.current_question_group = list(grouped_questions.keys())[current_index - 1]
-                    st.rerun()
+            if list(grouped_questions.keys()).index(current_group) > 0:
+                if st.button("Previous Question"):
+                    current_index = list(grouped_questions.keys()).index(current_group)
+                    if current_index > 0:
+                        st.session_state.current_question_group = list(grouped_questions.keys())[current_index - 1]
+                        st.rerun()
         with col2:
-            if st.button("Next Question"):
-                current_index = list(grouped_questions.keys()).index(current_group)
-                if current_index < len(grouped_questions) - 1:
-                    st.session_state.current_question_group = list(grouped_questions.keys())[current_index + 1]
-                    st.rerun()
+             if list(grouped_questions.keys()).index(current_group) < len(grouped_questions) - 1:
+                 if st.button("Next Question"):
+                    current_index = list(grouped_questions.keys()).index(current_group)
+                    if current_index < len(grouped_questions) - 1:
+                        st.session_state.current_question_group = list(grouped_questions.keys())[current_index + 1]
+                        st.rerun()
 
         if st.button("Submit Assessment"):
             st.session_state.submitted = True
