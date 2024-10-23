@@ -210,7 +210,7 @@ def main(collection, questions_fp, ai_client):
     if st.session_state.student_id is None:
         banner_id = st.text_input("Enter the last four digits of your Banner ID:")
         if st.button("Submit"):
-            if banner_id:
+            if banner_id and banner_id.isdigit() and len(banner_id) == 4:
                 student_id, current_attempt, is_new_student = get_or_create_student(banner_id)
                 st.session_state.student_id = student_id
                 st.session_state.current_attempt = current_attempt
@@ -223,7 +223,7 @@ def main(collection, questions_fp, ai_client):
                     st.button("Start Test")
                     return
             else:   
-                st.error("Please enter a valid Banner ID.")
+                st.error("Please enter a valid 4-digit Banner ID.")
         return
     
     # Handle different attempts
