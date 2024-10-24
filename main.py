@@ -207,10 +207,10 @@ def main(collection, questions_fp, ai_client):
         transform: scale(1.05);
     }
     .stButton>button:active {
-        background-color: #003D2A; /* Darker green on click */
+        background-color: #003D2A;
         color:#00533E;
-        transform: scale(0.95); /* Slightly reduce size on click */
-        transition: transform 0.1s; /* Quick transition for active state */
+        transform: scale(0.95); 
+        transition: transform 0.1s; 
     }
     .stTextInput>div>div>input {
         border-color: #00533E;
