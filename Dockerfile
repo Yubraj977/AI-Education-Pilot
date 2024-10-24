@@ -1,17 +1,16 @@
 # Python version 3.10-slim
 ARG PYTHON_VERSION=3.10
-FROM python:${PYTHON_VERSION}-slim as python-base
+FROM python:${PYTHON_VERSION} AS python-base
 
 # Set the working directory in the container
 WORKDIR /AI-Education-Pilot
-
+# Install system dependencies and the psycopg2 package
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential \
-    curl \
-    apt-utils \
-    gnupg2 &&\
+    apt-get install -y --no-install-recommends \
+    libpq-dev gcc curl gnupg2 && \
     rm -rf /var/lib/apt/lists/* && \
-    pip install --upgrade pip
+    pip install --upgrade pip && \
+    pip install psycopg2
 
 RUN apt-get update
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
@@ -30,6 +29,9 @@ RUN cat /etc/odbc.ini
 RUN pip install -r requirements.txt
 # Copy the current directory contents into the container
 COPY . /AI-Education-Pilot
+# Copy the root certificate into the container
+COPY .postgresql/root.crt /root/.postgresql/root.crt
+
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
