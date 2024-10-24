@@ -14,11 +14,11 @@ username = os.getenv("DB_USERNAME")  # Replace with your username
 password = os.getenv("DB_PASSWORD")  # Replace with your password
 driver = "ODBC Driver 18 for SQL Server"
 
-# Create the SQLAlchemy engine
+'''# Create the SQLAlchemy engine
 DATABASE_URL = (
     f"mssql+pyodbc://{username}:{password}@{server}/{database}?driver={driver}"
-)
-engine = create_engine(DATABASE_URL)
+)'''
+engine = create_engine(os.getenv('DATABASE_URL'))
 
 # Create a base class for declarative models
 Base = declarative_base()
