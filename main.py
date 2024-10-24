@@ -200,6 +200,18 @@ def main(collection, questions_fp, ai_client):
         background-color: #00533E;
         color: white;
     }
+    .stButton>button:hover {
+        border-color: #00533E;
+        color:#00533E;
+        background-color: white; 
+        transform: scale(1.05);
+    }
+    .stButton>button:active {
+        background-color: #003D2A; /* Darker green on click */
+        color:#00533E;
+        transform: scale(0.95); /* Slightly reduce size on click */
+        transition: transform 0.1s; /* Quick transition for active state */
+    }
     .stTextInput>div>div>input {
         border-color: #00533E;
     }
