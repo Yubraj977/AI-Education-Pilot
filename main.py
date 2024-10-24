@@ -169,8 +169,8 @@ def second_attempt_flow(questions):
                         st.session_state.current_question_group = list(grouped_questions.keys())[current_index - 1]
                         st.rerun()
         with col2:
-            if list(grouped_questions.keys()).index(current_group) < len(grouped_questions) - 1:
-                if st.button("Next Question"):
+             if list(grouped_questions.keys()).index(current_group) < len(grouped_questions) - 1:
+                 if st.button("Next Question"):
                     current_index = list(grouped_questions.keys()).index(current_group)
                     if current_index < len(grouped_questions) - 1:
                         st.session_state.current_question_group = list(grouped_questions.keys())[current_index + 1]
