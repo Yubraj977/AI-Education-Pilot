@@ -15,7 +15,7 @@ def initialize_resources(_questions_fp):
 
 def first_attempt_flow(collection, questions, answers, ai_client):
     # Filter questions for first attempt
-    first_attempt_questions = {k: v for k, v in questions.items() if k not in ['6', '7']}
+    first_attempt_questions = {k: v for k, v in questions.items() if k not in ['6', '7', '8']}
     grouped_questions = group_question(first_attempt_questions)
     
     if "user_answers" not in st.session_state:

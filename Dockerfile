@@ -1,4 +1,4 @@
-# Python version 3.10-slim
+# Python version 3.10
 ARG PYTHON_VERSION=3.10
 FROM python:${PYTHON_VERSION} AS python-base
 
