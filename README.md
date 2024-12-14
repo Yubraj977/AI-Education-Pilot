@@ -17,33 +17,36 @@ This project is a Student Assessment Feedback System that uses AI to provide per
    git clone https://github.com/your-username/student-assessment-feedback-system.git
    cd student-assessment-feedback-system
    ```
-
-2. Install the ODBC Driver: If you're on macOS, you need to install the ODBC driver to connect to Azure SQL Database. Run the following commands in your terminal:
-   ```
-   brew info unixodbc
-   brew tap microsoft/mssql-release https://github.com/Microsoft/homebrew-mssql-release
-   brew update
-   brew install msodbcsql18
-   ```
-3. Create a virtual environment and activate it:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
-
-4. Install the required dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-5. Set up your environment variables:
+2. Set up your environment variables:
    Create a `.env` file in the project root and add your OpenAI API key:
    ```
    OPENAI_API_KEY=your_api_key_here
-   DB_USERNAME=your_db_usernmae
+   OPENAI_API_KEY=your_api_key_here
+   DB_USERNAME=your_db_username
    DB_PASSWORD=your_db_password
+   DB_HOST=your_postgresql_host
+   DB_PORT=5432  # Default PostgreSQL port
+   DB_NAME=your_db_name
 
    ```
+
+3. Set up Docker:
+    
+   Build the Docker image: In the project directory, build the Docker image using the    provided Dockerfile:
+   ```
+     docker build -t student-assessment-feedback-system .
+
+   ```
+4. Run the Docker container:
+   Once the image is built, you can run the container. Make sure to pass the 
+   environment variables using the .env file. This file should contain your 
+   PostgreSQL connection settings and the OpenAI API key.
+   ```
+     docker run --env-file .env -p 8501:8501 student-assessment-feedback-system
+
+   ```
+   This will run the application in a containerized environment on port 8501. You can 
+   access the Streamlit interface at http://localhost:8501.
 
 ## Usage
 
@@ -53,10 +56,8 @@ This project is a Student Assessment Feedback System that uses AI to provide per
 2. Prepare your questions and answers:
    Create a JSON file with questions and answers, and update the `questions_fp` variable in the script.
 
-3. Run the Streamlit app:
-   ```
-   streamlit run app.py
-   ```
+3. Set up PostgreSQL:
+   Ensure that your PostgreSQL instance is running and accessible. You can either use    a local PostgreSQL server or a managed service like AWS RDS or Heroku Postgres. If    running locally, use Docker to set up a PostgreSQL container if needed.
 
 4. Open the provided URL in your web browser to access the Student Assessment Feedback System.
 
