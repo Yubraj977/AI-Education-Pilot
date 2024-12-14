@@ -105,7 +105,7 @@ def first_attempt_flow(collection, questions, answers, ai_client):
                                 answers[q_id],
                             )
                             st.session_state.feedbacks[q_id] = feedback
-                            insert_ai_feedback(st.session_state.student_id, feedback)
+                            insert_ai_feedback(st.session_state.student_id, feedback, q_id)
 
                     st.markdown("<p style='font-size: 18px; font-weight: bold; color: #00533E;'>AI Feedback:</p>", unsafe_allow_html=True)
                     st.write(st.session_state.feedbacks[q_id])
@@ -250,7 +250,7 @@ def main(collection, questions_fp, ai_client):
     # Handle different attempts
     if st.session_state.current_attempt == 1:
         st.write("Current attempt: 1")
-        st.markdown("<p class='instruction'>Be sure to save your answer before moving to the next question, or you will lose your progress. Answers will only be submitted after you have clicked the 'Submit Assessment' button.</p>", unsafe_allow_html=True)
+        st.markdown("<p class='instruction'>Be sure to save your answer before moving to the next question, or you will lose your progress. Answers will only be saved for this current active session, and they will only be submitted after you have clicked the 'Submit Assessment' button.</p>", unsafe_allow_html=True)
         first_attempt_flow(collection, questions, answers, ai_client)
     elif st.session_state.current_attempt == 2:
         if "submitted" in st.session_state and st.session_state.submitted:
@@ -260,7 +260,7 @@ def main(collection, questions_fp, ai_client):
         else:
             # Otherwise, start the second attempt
             st.write("Current attempt: 2")
-            st.markdown("<p class='instruction'>Be sure to save your answer before moving to the next question, or you will lose your progress. Answers will only be submitted after you have clicked the 'Submit Assessment' button.</p>", unsafe_allow_html=True)
+            st.markdown("<p class='instruction'>Be sure to save your answer before moving to the next question, or you will lose your progress. Answers will only be saved for this current active session, and they will only be submitted after you have clicked the 'Submit Assessment' button.</p>", unsafe_allow_html=True)
             second_attempt_flow(questions)
     else:
         st.write("You have completed both attempts of the assessment.")

@@ -30,13 +30,13 @@ RUN pip install -r requirements.txt
 # Copy the current directory contents into the container
 COPY . /AI-Education-Pilot
 # Copy the root certificate into the container
-COPY .postgresql/root.crt /root/.postgresql/root.crt
+COPY .postgresql/us-east-2-bundle.pem /root/.postgresql/us-east-2-bundle.pem
 
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose port (assuming Streamlit defaults to 8501)
+# Expose port 
 EXPOSE 8501
 
 # Define the command to run the app using Streamlit

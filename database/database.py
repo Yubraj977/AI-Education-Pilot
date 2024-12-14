@@ -65,10 +65,10 @@ def get_student_answers(student_id):
     return answers
 
 
-def insert_ai_feedback(student_id, feedback):
+def insert_ai_feedback(student_id, feedback, question_id):
     session = Session()
     try:
-        new_feedback = AIFeedback(student_id=student_id, feedback=feedback)
+        new_feedback = AIFeedback(student_id=student_id, feedback=feedback, question_id=question_id)
         session.add(new_feedback)
         session.commit()
     except Exception as e:

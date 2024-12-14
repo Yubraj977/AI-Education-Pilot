@@ -42,13 +42,9 @@ def load_questions_and_answers(json_path):
     return questions, data["answers"]
 
 def get_relevant_content(collection, user_answer, actual_answer, question):
-     # Create separate queries for clarity
+
     combined_query = f"{actual_answer}{question}"
     
-    
-    # Combine the queries into a list for better context
-    
-
     # Perform the queries and collect results
     results = collection.query(query_texts=combined_query, n_results=5)
 
