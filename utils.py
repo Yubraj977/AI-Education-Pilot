@@ -136,7 +136,7 @@ def get_or_create_chroma_collection(_db_client, module_content_fp, _ai_client):
     collection_name = "module_content"
 
     embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-        api_key=os.getenv("OPENAI_API_KEY2"), model_name="text-embedding-ada-002"
+        api_key=os.getenv("OPENAI_API_KEY"), model_name="text-embedding-ada-002"
     )
 
     try:

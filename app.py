@@ -15,7 +15,7 @@ st.set_page_config(
 load_dotenv()
 
 # Initialize OpenAI client
-ai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY2"))
+ai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Initialize ChromaDB persistent client
 persistent_path = "Vector_Storage"

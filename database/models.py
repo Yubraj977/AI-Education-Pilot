@@ -9,9 +9,9 @@ load_dotenv()
 
 # Database connection parameters
 database = os.getenv("DB_NAME") # Replace with your database name
-username = os.getenv("AWS_USERNAME")  # Replace with your username
-password = os.getenv("AWS_PASSWORD")  # Replace with your password
-host = os.getenv("DATABASE_HOST_AWS")
+username = os.getenv("DB_USERNAME")  # Replace with your username
+password = os.getenv("DB_PASSWORD")  # Replace with your password
+host = os.getenv("DB_HOST")
 ssl_cert_path = os.path.join(os.getcwd(), '.postgresql', 'us-east-2-bundle.pem')
 
 
@@ -20,6 +20,7 @@ DATABASE_URL = (
 )
 
 engine = create_engine(DATABASE_URL)
+
 
 # Create a base class for declarative models
 Base = declarative_base()

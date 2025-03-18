@@ -25,7 +25,7 @@ This project is a Student Assessment Feedback System that uses AI to provide per
    DB_PASSWORD=your_db_password
    DB_HOST=your_postgresql_host
    DB_PORT=5432  # Default PostgreSQL port
-   DB_NAME=your_db_name
+   DB_NAME=your_
 
    ```
 
